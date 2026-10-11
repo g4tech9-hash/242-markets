@@ -19,8 +19,10 @@ flutter build apk --release
 The APK is written to `build/app/outputs/flutter-apk/app-release.apk`.
 
 You can also use the included GitHub Actions workflow (**Build Android APK**,
-`.github/workflows/build.yml`) — trigger it manually from the Actions tab and
-download the `242-markets-apk` artifact from the run.
+`.github/workflows/build.yml`) — it runs on every push to `master`/`arena`
+branches (or manually from the Actions tab). Each run uploads the `242-markets-apk`
+artifact and publishes the APK to `dist/242-markets-release.apk` on the branch
+for easy download.
 
 > The release build is signed with the debug keystore so it can be sideloaded
 > for testing. Add a proper signing config before publishing.
