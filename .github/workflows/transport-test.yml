@@ -5,28 +5,23 @@ on:
     branches: [ arena/b9ae89a0-242-markets ]
 
 jobs:
-  test:
+  probe:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Emit 60 annotations of 30KB (step 1)
-        run: |
-          chunk=$(python3 -c "print('A'*30000)")
-          for i in $(seq 1 60); do
-            echo "::error title=c1-$i::${chunk}"
-          done
+      - uses: actions/checkout@v4
 
-      - name: Emit 60 annotations of 30KB (step 2)
+      - name: Probe push permission
         run: |
-          chunk=$(python3 -c "print('B'*30000)")
-          for i in $(seq 1 60); do
-            echo "::error title=c2-$i::${chunk}"
-          done
-
-      - name: Emit one 70KB annotation to probe message cap
-        run: |
-          chunk=$(python3 -c "print('C'*70000)")
-          echo "::error title=bigone::${chunk}"
-
-      - name: Emit 60KB step summary
-        run: |
-          python3 -c "print('S'*60000)" >> "$GITHUB_STEP_SUMMARY"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p dist
+          date -u +%H%M%S > dist/push-probe.txt
+          git add dist/push-probe.txt
+          git diff --staged --quiet || git commit -m "Probe: workflow push permission [skip ci]"
+          if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+            echo "::notice title=probe::PUSH OK"
+          else
+            echo "::notice title=probe::PUSH FAILED"
+          fi
