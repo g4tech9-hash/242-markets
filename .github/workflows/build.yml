@@ -23,6 +23,11 @@ jobs:
           channel: 'stable'
           architecture: x64
 
+      - name: Report Flutter version
+        run: |
+          flutter --version 2>&1 | tee flutter-version.txt
+          echo "::notice title=flutter version::$(head -n 1 flutter-version.txt)"
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -46,15 +51,28 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk dist/242-markets-release.apk
           git add dist/242-markets-release.apk
           git diff --staged --quiet || git commit -m "Build: publish release APK [skip ci]"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning title=publish::git push failed (workflow token may be read-only)"
 
-      - name: Publish failure log to branch
+      - name: Publish failure diagnostics
         if: failure()
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p dist
-          cp build.log dist/build-failure.log
-          git add dist/build-failure.log
-          git diff --staged --quiet || git commit -m "Build: record build failure log [skip ci]"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          if [ -f build.log ]; then
+            echo "### build.log tail" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -n 120 build.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -n 120 build.log | sed 's/%/%25/g; s/\r/%0D/g' | split -l 8 - /tmp/alog_
+            for f in /tmp/alog_*; do
+              msg=$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")
+              echo "::error title=build log::${msg}"
+            done
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            mkdir -p dist
+            cp build.log dist/build-failure.log
+            git add dist/build-failure.log
+            git diff --staged --quiet || git commit -m "Build: record build failure log [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning title=publish::git push failed (workflow token may be read-only)"
+          else
+            echo "::error title=build log::build.log not found"
+          fi
