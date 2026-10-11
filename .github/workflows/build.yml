@@ -24,12 +24,14 @@ jobs:
           architecture: x64
 
       - name: Install dependencies
-        run: flutter pub get
-        working-directory: apps/flutter_app
+        run: |
+          cd apps/flutter_app
+          flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
-        working-directory: apps/flutter_app
+        run: |
+          cd apps/flutter_app
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
