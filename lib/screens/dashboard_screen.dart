@@ -166,7 +166,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildStatRow(String label, String value, {bool isBold = false, Color? color}) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.between,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
         Text(

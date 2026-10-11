@@ -79,13 +79,13 @@ jobs:
           grep -iE 'error|exception|failed|what went wrong|caused by|fatal|no space|killed' /tmp/clean.log | tail -n 30 > /tmp/err.log || true
           for f in /tmp/err.log; do
             if [ -s "$f" ]; then
-              msg=$(sed ':a;N;$!ba;s/\n/%0A/g; s/%/%25/g; s/\r/%0D/g' "$f")
+              msg=$(sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' "$f")
               echo "::error title=possible errors::${msg}"
             fi
           done
           tail -n 120 /tmp/clean.log | sed 's/%/%25/g; s/\r/%0D/g' | split -l 12 - /tmp/alog_
           for f in /tmp/alog_*; do
-            msg=$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")
+            msg=$(sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' "$f")
             echo "::error title=build log::${msg}"
           done
           git config user.name "github-actions[bot]"
@@ -96,3 +96,4 @@ jobs:
           git add dist/build-failure.log dist/build-failure-clean.log
           git diff --staged --quiet || git commit -m "Build: record build failure log [skip ci]"
           git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning title=publish::git push failed (workflow token may be read-only)"
+          exit 0
