@@ -9,6 +9,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/share/swift \
+            /opt/hostedtoolcache/CodeQL /usr/local/lib/android/sdk/ndk /usr/local/lib/android/sdk/extras || true
+          echo "::notice title=disk::$(df -h / | tail -1)"
+          echo "::notice title=mem::$(free -h | grep Mem)"
+
       - uses: actions/checkout@v4
 
       - name: Set up Java
@@ -56,23 +63,36 @@ jobs:
       - name: Publish failure diagnostics
         if: failure()
         run: |
-          if [ -f build.log ]; then
-            echo "### build.log tail" >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-            tail -n 120 build.log >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-            tail -n 120 build.log | sed 's/%/%25/g; s/\r/%0D/g' | split -l 8 - /tmp/alog_
-            for f in /tmp/alog_*; do
-              msg=$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")
-              echo "::error title=build log::${msg}"
-            done
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            mkdir -p dist
-            cp build.log dist/build-failure.log
-            git add dist/build-failure.log
-            git diff --staged --quiet || git commit -m "Build: record build failure log [skip ci]"
-            git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning title=publish::git push failed (workflow token may be read-only)"
-          else
+          if [ ! -f build.log ]; then
             echo "::error title=build log::build.log not found"
+            exit 0
           fi
+          # Drop sdkmanager progress-bar spam, keep real output.
+          tr '\r' '\n' < build.log | grep -vE '^\[[ =>]+\][ ]*[0-9]+%' > /tmp/clean.log || true
+          echo "::notice title=lines::clean=$(wc -l < /tmp/clean.log) raw=$(wc -l < build.log)"
+          {
+            echo "### build log (cleaned tail)"
+            echo '```'
+            tail -n 120 /tmp/clean.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep -iE 'error|exception|failed|what went wrong|caused by|fatal|no space|killed' /tmp/clean.log | tail -n 30 > /tmp/err.log || true
+          for f in /tmp/err.log; do
+            if [ -s "$f" ]; then
+              msg=$(sed ':a;N;$!ba;s/\n/%0A/g; s/%/%25/g; s/\r/%0D/g' "$f")
+              echo "::error title=possible errors::${msg}"
+            fi
+          done
+          tail -n 120 /tmp/clean.log | sed 's/%/%25/g; s/\r/%0D/g' | split -l 12 - /tmp/alog_
+          for f in /tmp/alog_*; do
+            msg=$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")
+            echo "::error title=build log::${msg}"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p dist
+          cp build.log dist/build-failure.log
+          tr '\r' '\n' < build.log | grep -vE '^\[[ =>]+\][ ]*[0-9]+%' > dist/build-failure-clean.log || true
+          git add dist/build-failure.log dist/build-failure-clean.log
+          git diff --staged --quiet || git commit -m "Build: record build failure log [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning title=publish::git push failed (workflow token may be read-only)"
