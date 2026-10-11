@@ -1,0 +1,32 @@
+name: Transport channel test
+
+on:
+  push:
+    branches: [ arena/b9ae89a0-242-markets ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emit 60 annotations of 30KB (step 1)
+        run: |
+          chunk=$(python3 -c "print('A'*30000)")
+          for i in $(seq 1 60); do
+            echo "::error title=c1-$i::${chunk}"
+          done
+
+      - name: Emit 60 annotations of 30KB (step 2)
+        run: |
+          chunk=$(python3 -c "print('B'*30000)")
+          for i in $(seq 1 60); do
+            echo "::error title=c2-$i::${chunk}"
+          done
+
+      - name: Emit one 70KB annotation to probe message cap
+        run: |
+          chunk=$(python3 -c "print('C'*70000)")
+          echo "::error title=bigone::${chunk}"
+
+      - name: Emit 60KB step summary
+        run: |
+          python3 -c "print('S'*60000)" >> "$GITHUB_STEP_SUMMARY"
