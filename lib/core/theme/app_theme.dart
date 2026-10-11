@@ -16,11 +16,10 @@ ThemeData bahamasTheme = ThemeData(
   brightness: Brightness.dark,
   scaffoldBackgroundColor: AppColors.background,
   primaryColor: AppColors.primary,
-  colorScheme: ColorScheme.dark(
+  colorScheme: const ColorScheme.dark(
     primary: AppColors.primary,
     secondary: AppColors.accent,
     surface: AppColors.surface,
-    background: AppColors.background,
   ),
   textTheme: const TextTheme(
     headlineMedium: TextStyle(

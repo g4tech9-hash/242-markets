@@ -28,7 +28,7 @@ class DashboardScreen extends StatelessWidget {
                     height: 70,
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     decoration: BoxDecoration(
-                      color: AppColors.surface.withOpacity(0.3),
+                      color: AppColors.surface.withValues(alpha: 0.3),
                       border: const Border(bottom: BorderSide(color: Colors.white10)),
                     ),
                     child: Row(
@@ -109,7 +109,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isActive ? AppColors.primary : AppColors.surface,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: isActive ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8)] : [],
+        boxShadow: isActive ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8)] : [],
       ),
       child: Text(
         label,
@@ -126,7 +126,7 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.5),
+        color: AppColors.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white10),
       ),

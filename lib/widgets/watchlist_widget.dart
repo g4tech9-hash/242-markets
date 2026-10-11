@@ -14,9 +14,9 @@ class WatchlistWidget extends StatelessWidget {
       width: 300,
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.6),
+        color: AppColors.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -70,7 +70,7 @@ class WatchlistWidget extends StatelessWidget {
                       ],
                     ),
                     onTap: () => marketProvider.setActiveTicker(asset['ticker']),
-                    tileColor: isActive ? AppColors.primary.withOpacity(0.1) : null,
+                    tileColor: isActive ? AppColors.primary.withValues(alpha: 0.1) : null,
                     selected: isActive,
                   );
                 },
